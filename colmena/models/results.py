@@ -3,6 +3,7 @@ import json
 import logging
 import sys
 from math import nan
+import os
 import pickle as pkl
 from datetime import datetime
 from enum import Enum
@@ -150,6 +151,7 @@ class ResourceRequirements(BaseModel):
     node_count: int = Field(1, description='Total number of nodes to use for the task')
     cpu_processes: int = Field(1, description='Total number of MPI ranks per node')
     cpu_threads: int = Field(1, description='Number of threads per process')
+    gpus_per_process: float = Field(0, description="Number of GPUs per process")
 
     @property
     def total_ranks(self) -> int:
