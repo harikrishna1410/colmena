@@ -109,8 +109,8 @@ def _preprocess_callback(
 class EnsembleTaskServer(FutureBasedTaskServer):
     def __init__(
         self,
-        queues: ColmenaQueues,
         methods: Collection[Union[Callable, ColmenaMethod]],
+        queues: ColmenaQueues,
         system_config: SystemConfig | None = None,
         child_executor_name: str = "async_mpi",
         task_executor_name: list[str] | str = ["async_loky", "async_mpi"],
