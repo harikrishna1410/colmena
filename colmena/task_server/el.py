@@ -82,8 +82,10 @@ def _preprocess_callback(
 
     ## Update execute task
     execute_task.executable = execute_task.executable + " " + " ".join(shlex.quote(str(a)) for a in exec_args)
-    execute_task.stdout_file = str(temp_dir / "colmena.stdout")
-    execute_task.stderr_file = str(temp_dir / "colmena.stderr")
+    execute_task.executor_name = "async_mpi"
+    execute_task.run_dir = str(temp_dir)
+    execute_task.stdout_file = "colmena.stdout"
+    execute_task.stderr_file = "colmena.stderr"
     exec_future: Future = client.submit(execute_task)
 
     # Submit post-process to collect the results of the exec_function
@@ -140,12 +142,13 @@ class EnsembleTaskServer(FutureBasedTaskServer):
             task_executor_name=task_executor_name,
             return_stdout=True,
             master_logs=True,
+            worker_logs=True,
             children_scheduler_policy="fixed_leafs_children_policy",
             policy_config=PolicyConfig(nlevels=1, leaf_nodes=len(get_nodes())),
             cluster=True,
             gpu_selector=gpu_selector,
             log_dir=log_dir,
-            mpi_config=MPIConfig(mpi_flavour=mpi_flavour),
+            mpi_config=MPIConfig(flavor="test"),
         )
 
         self._el: EnsembleLauncher = None
@@ -175,7 +178,7 @@ class EnsembleTaskServer(FutureBasedTaskServer):
             function: ExecutableMethod
             ##preprocess task
             pre_task = Task(
-                task_id=f"pre_{function.name}",
+                task_id=f"pre_{function.name}_{task.task_id}",
                 nnodes=1,
                 ppn=1,
                 executable=_execute_preprocess,
@@ -185,7 +188,7 @@ class EnsembleTaskServer(FutureBasedTaskServer):
 
             ## Actual executable
             exec_task = Task(
-                task_id=function.name,
+                task_id=f"{function.name}_{task.task_id}",
                 nnodes=task.resources.node_count,
                 ppn=task.resources.cpu_processes,
                 ngpus_per_process=task.resources.gpus_per_process,
@@ -194,7 +197,7 @@ class EnsembleTaskServer(FutureBasedTaskServer):
 
             ## Post task
             post_task = Task(
-                task_id=f"post_{function.name}",
+                task_id=f"post_{function.name}_{task.task_id}",
                 nnodes=1,
                 ppn=1,
                 executable=partial(_execute_postprocess, function),

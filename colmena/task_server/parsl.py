@@ -18,6 +18,7 @@ from parsl.app.bash import BashApp
 from parsl.config import Config
 from parsl.app.python import PythonApp
 from colmena.models.methods import ExecutableMethod
+from colmena.models.results import WorkerInformation
 
 from colmena.queue.base import ColmenaQueues
 from colmena.models import Result, FailureInformation, ResourceRequirements
@@ -121,7 +122,7 @@ def _execute_postprocess(task: ExecutableMethod, exit_code: int, result: Result,
                                                 result.time.additional['exec_preprocess'])
 
     # Add the worker information into the tasks, if available
-    worker_info = {'hostname': platform.node()}
+    worker_info = WorkerInformation(hostname=platform.node())
     result.worker_info = worker_info
 
     # Re-pack the results (will use proxystore, if able)
