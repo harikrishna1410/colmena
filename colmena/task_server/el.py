@@ -1,11 +1,13 @@
 import logging
 import os
 import shlex
+import sys
 import uuid
 from concurrent.futures import Future
 from functools import partial
 from typing import Callable, Collection, Dict, Optional, Tuple, Union
 
+import cloudpickle
 from ensemble_launcher import EnsembleLauncher
 from ensemble_launcher.config import (
     LauncherConfig,
@@ -155,6 +157,10 @@ class EnsembleTaskServer(FutureBasedTaskServer):
         self._client: ClusterClient = None
 
     def _setup(self):
+        main_module = sys.modules.get("__main__")
+        if main_module is not None and hasattr(main_module, "__file__"):
+            cloudpickle.register_pickle_by_value(main_module)
+
         self._el = EnsembleLauncher(
             ensemble_file={},
             system_config=self._system_config,
